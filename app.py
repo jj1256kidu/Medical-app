@@ -1,6 +1,23 @@
 import streamlit as st
 import sys
-import subprocess
+import os
+
+# Add current directory to Python path
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+try:
+    import plotly.graph_objects as go
+    import pandas as pd
+    import numpy as np
+    from datetime import datetime, timedelta
+    import sqlite3
+    import time
+    import random
+    from typing import Dict, List, Tuple
+except ImportError as e:
+    st.error(f"Required package not found: {str(e)}")
+    st.error("Please ensure all dependencies are installed correctly.")
+    st.stop()
 
 def check_and_install_plotly():
     try:
@@ -19,16 +36,6 @@ def check_and_install_plotly():
 if not check_and_install_plotly():
     st.error("Plotly installation failed. Please check your environment setup.")
     st.stop()
-
-import pandas as pd
-import numpy as np
-from datetime import datetime, timedelta
-import sqlite3
-import time
-import random
-from typing import Dict, List, Tuple
-import os
-from pathlib import Path
 
 # Set page config
 st.set_page_config(
