@@ -19,40 +19,145 @@ except ImportError as e:
     st.error("Please ensure all dependencies are installed correctly.")
     st.stop()
 
-def check_and_install_plotly():
-    try:
-        import plotly.graph_objects as go
-        return True
-    except ImportError:
-        st.warning("Plotly not found. Attempting to install...")
-        try:
-            subprocess.check_call([sys.executable, "-m", "pip", "install", "plotly==5.18.0"])
-            import plotly.graph_objects as go
-            return True
-        except Exception as e:
-            st.error(f"Failed to install plotly: {str(e)}")
-            return False
+# Custom CSS for modern, futuristic look
+st.markdown("""
+    <style>
+    /* Main theme colors */
+    :root {
+        --primary-color: #00a8e8;
+        --secondary-color: #003459;
+        --accent-color: #007ea7;
+        --background-color: #00171f;
+        --text-color: #ffffff;
+    }
+    
+    /* Global styles */
+    .stApp {
+        background-color: var(--background-color);
+        color: var(--text-color);
+    }
+    
+    /* Sidebar styling */
+    .css-1d391kg {
+        background-color: var(--secondary-color) !important;
+    }
+    
+    /* Button styling */
+    .stButton>button {
+        background-color: var(--primary-color);
+        color: white;
+        border-radius: 10px;
+        border: none;
+        padding: 10px 20px;
+        font-weight: bold;
+        transition: all 0.3s ease;
+    }
+    
+    .stButton>button:hover {
+        background-color: var(--accent-color);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 168, 232, 0.3);
+    }
+    
+    /* Metric cards */
+    .metric-card {
+        background: linear-gradient(145deg, var(--secondary-color), var(--background-color));
+        border-radius: 15px;
+        padding: 20px;
+        margin: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s ease;
+    }
+    
+    .metric-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0, 168, 232, 0.4);
+    }
+    
+    /* Alert styling */
+    .alert-critical {
+        background-color: #ff4444;
+        color: white;
+        padding: 10px;
+        border-radius: 10px;
+        margin: 5px 0;
+        animation: pulse 2s infinite;
+    }
+    
+    .alert-warning {
+        background-color: #ffbb33;
+        color: white;
+        padding: 10px;
+        border-radius: 10px;
+        margin: 5px 0;
+    }
+    
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.7; }
+        100% { opacity: 1; }
+    }
+    
+    /* Chart containers */
+    .chart-container {
+        background: rgba(0, 55, 95, 0.2);
+        border-radius: 15px;
+        padding: 20px;
+        margin: 10px 0;
+    }
+    
+    /* Login page styling */
+    .login-container {
+        max-width: 400px;
+        margin: 0 auto;
+        padding: 20px;
+        background: rgba(0, 55, 95, 0.3);
+        border-radius: 15px;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    }
+    </style>
+""", unsafe_allow_html=True)
 
-if not check_and_install_plotly():
-    st.error("Plotly installation failed. Please check your environment setup.")
-    st.stop()
+# Predefined users
+USERS = {
+    "doctor": {
+        "password": "doctor123",
+        "role": "Doctor",
+        "name": "Dr. Smith"
+    },
+    "nurse": {
+        "password": "nurse123",
+        "role": "Nurse",
+        "name": "Nurse Johnson"
+    },
+    "admin": {
+        "password": "admin123",
+        "role": "Admin",
+        "name": "Admin"
+    }
+}
 
-# Set page config
+# Set page config with modern theme
 st.set_page_config(
     page_title="SkanRay Real-Time Patient Monitoring System",
     page_icon="🏥",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="expanded",
+    menu_items={
+        'Get Help': 'https://www.skanray.com/support',
+        'Report a bug': "https://www.skanray.com/bug",
+        'About': "# SkanRay Real-Time Patient Monitoring System v2.0"
+    }
 )
 
 # Constants
 NUM_BEDS = 4
 VITAL_SIGNS = {
-    'Heart Rate': {'min': 60, 'max': 100, 'unit': 'bpm'},
-    'Blood Pressure': {'min': 90, 'max': 140, 'unit': 'mmHg'},
-    'SpO2': {'min': 95, 'max': 100, 'unit': '%'},
-    'Respiration Rate': {'min': 12, 'max': 20, 'unit': '/min'},
-    'Temperature': {'min': 36.5, 'max': 37.5, 'unit': '°C'}
+    'Heart Rate': {'min': 60, 'max': 100, 'unit': 'bpm', 'icon': '❤️'},
+    'Blood Pressure': {'min': 90, 'max': 140, 'unit': 'mmHg', 'icon': '🩸'},
+    'SpO2': {'min': 95, 'max': 100, 'unit': '%', 'icon': '🫁'},
+    'Respiration Rate': {'min': 12, 'max': 20, 'unit': '/min', 'icon': '🌬️'},
+    'Temperature': {'min': 36.5, 'max': 37.5, 'unit': '°C', 'icon': '🌡️'}
 }
 
 # Initialize session state
@@ -63,79 +168,48 @@ if 'current_user' not in st.session_state:
 if 'patient_data' not in st.session_state:
     st.session_state.patient_data = {}
 
-# Database setup
-def init_db():
-    conn = sqlite3.connect('patient_monitoring.db')
-    c = conn.cursor()
+# Modern login page
+def login_page():
+    st.markdown("""
+        <div style='text-align: center; margin-bottom: 30px;'>
+            <h1 style='color: #00a8e8; font-size: 2.5em;'>SkanRay</h1>
+            <h2 style='color: #ffffff;'>Real-Time Patient Monitoring System</h2>
+        </div>
+    """, unsafe_allow_html=True)
     
-    # Create tables
-    c.execute('''CREATE TABLE IF NOT EXISTS patients
-                 (bed_id INTEGER PRIMARY KEY,
-                  name TEXT,
-                  age INTEGER,
-                  gender TEXT,
-                  admission_date TEXT)''')
-    
-    c.execute('''CREATE TABLE IF NOT EXISTS vitals
-                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
-                  bed_id INTEGER,
-                  timestamp TEXT,
-                  heart_rate REAL,
-                  blood_pressure REAL,
-                  spo2 REAL,
-                  respiration_rate REAL,
-                  temperature REAL)''')
-    
-    c.execute('''CREATE TABLE IF NOT EXISTS users
-                 (username TEXT PRIMARY KEY,
-                  password TEXT,
-                  role TEXT)''')
-    
-    conn.commit()
-    conn.close()
-
-# Initialize database
-init_db()
-
-# Patient simulator class
-class PatientSimulator:
-    def __init__(self, bed_id: int):
-        self.bed_id = bed_id
-        self.vitals = {}
-        self.alarms = []
-        self.last_sync = None
+    with st.container():
+        st.markdown('<div class="login-container">', unsafe_allow_html=True)
         
-    def generate_vitals(self) -> Dict:
-        vitals = {}
-        for vital, params in VITAL_SIGNS.items():
-            # Add some randomness to make it more realistic
-            value = random.uniform(params['min'], params['max'])
-            # Occasionally add some variation for realism
-            if random.random() < 0.1:
-                value += random.uniform(-5, 5)
-            vitals[vital] = round(value, 1)
-        return vitals
-    
-    def check_alarms(self, vitals: Dict) -> List[Dict]:
-        alarms = []
-        for vital, value in vitals.items():
-            params = VITAL_SIGNS[vital]
-            if value < params['min'] or value > params['max']:
-                severity = 'critical' if abs(value - (params['min'] + params['max'])/2) > 10 else 'warning'
-                alarms.append({
-                    'vital': vital,
-                    'value': value,
-                    'severity': severity,
-                    'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                })
-        return alarms
+        # Login form
+        username = st.text_input("Username", key="username").lower()
+        password = st.text_input("Password", type="password", key="password")
+        
+        if st.button("Login", key="login_button"):
+            if username in USERS and password == USERS[username]["password"]:
+                st.session_state.authenticated = True
+                st.session_state.current_user = {
+                    "username": username,
+                    "role": USERS[username]["role"],
+                    "name": USERS[username]["name"]
+                }
+                st.success(f"Welcome, {USERS[username]['name']}!")
+                st.rerun()
+            else:
+                st.error("Invalid credentials. Please try again.")
+        
+        st.markdown('</div>', unsafe_allow_html=True)
 
-# Monitor Console View
+# Modern monitor console view
 def monitor_console_view():
-    st.title("Monitor Console")
+    st.markdown("""
+        <div style='text-align: center; margin-bottom: 30px;'>
+            <h1 style='color: #00a8e8;'>Monitor Console</h1>
+            <p style='color: #ffffff;'>Real-time patient monitoring dashboard</p>
+        </div>
+    """, unsafe_allow_html=True)
     
-    # Create tabs for each bed
-    bed_tabs = st.tabs([f"Bed {i+1}" for i in range(NUM_BEDS)])
+    # Create tabs for each bed with modern styling
+    bed_tabs = st.tabs([f"Bed {i+1} 🏥" for i in range(NUM_BEDS)])
     
     for i, tab in enumerate(bed_tabs):
         with tab:
@@ -144,32 +218,33 @@ def monitor_console_view():
                 st.session_state.patient_data[bed_id] = PatientSimulator(bed_id)
             
             patient = st.session_state.patient_data[bed_id]
-            
-            # Generate new vitals
             vitals = patient.generate_vitals()
             alarms = patient.check_alarms(vitals)
             
-            # Display vitals in columns
-            col1, col2, col3, col4, col5 = st.columns(5)
+            # Modern metric display
+            cols = st.columns(5)
+            for idx, (vital, value) in enumerate(vitals.items()):
+                with cols[idx]:
+                    st.markdown(f"""
+                        <div class="metric-card">
+                            <h3>{VITAL_SIGNS[vital]['icon']} {vital}</h3>
+                            <h2 style='color: #00a8e8;'>{value} {VITAL_SIGNS[vital]['unit']}</h2>
+                        </div>
+                    """, unsafe_allow_html=True)
             
-            with col1:
-                st.metric("Heart Rate", f"{vitals['Heart Rate']} bpm")
-            with col2:
-                st.metric("Blood Pressure", f"{vitals['Blood Pressure']} mmHg")
-            with col3:
-                st.metric("SpO2", f"{vitals['SpO2']}%")
-            with col4:
-                st.metric("Respiration Rate", f"{vitals['Respiration Rate']} /min")
-            with col5:
-                st.metric("Temperature", f"{vitals['Temperature']}°C")
-            
-            # Display alarms if any
+            # Alarm display with modern styling
             if alarms:
-                st.warning("Active Alarms:")
+                st.markdown("### 🚨 Active Alarms")
                 for alarm in alarms:
-                    st.error(f"{alarm['vital']}: {alarm['value']} ({alarm['severity']})")
+                    alert_class = "alert-critical" if alarm['severity'] == 'critical' else "alert-warning"
+                    st.markdown(f"""
+                        <div class="{alert_class}">
+                            <strong>{alarm['vital']}</strong>: {alarm['value']} ({alarm['severity']})
+                        </div>
+                    """, unsafe_allow_html=True)
             
-            # Time series chart
+            # Modern chart display
+            st.markdown('<div class="chart-container">', unsafe_allow_html=True)
             st.subheader("Vital Signs Trend")
             fig = go.Figure()
             for vital in VITAL_SIGNS.keys():
@@ -177,32 +252,45 @@ def monitor_console_view():
                     x=[datetime.now()],
                     y=[vitals[vital]],
                     name=vital,
-                    mode='lines+markers'
+                    mode='lines+markers',
+                    line=dict(color='#00a8e8', width=2)
                 ))
+            fig.update_layout(
+                plot_bgcolor='rgba(0,0,0,0)',
+                paper_bgcolor='rgba(0,0,0,0)',
+                font=dict(color='white'),
+                xaxis=dict(showgrid=False),
+                yaxis=dict(showgrid=True, gridcolor='rgba(255,255,255,0.1)')
+            )
             st.plotly_chart(fig, use_container_width=True)
+            st.markdown('</div>', unsafe_allow_html=True)
             
-            # Control panel
-            st.subheader("Control Panel")
+            # Modern control panel
+            st.markdown("### Control Panel")
             col1, col2 = st.columns(2)
             with col1:
-                if st.button("Simulate USB-HID Data", key=f"usb_{bed_id}"):
-                    st.success("USB-HID data simulated successfully")
-            with col2:
-                if st.button("Sync to Central Server", key=f"sync_{bed_id}"):
+                if st.button("🔄 Sync Data", key=f"sync_{bed_id}"):
                     patient.last_sync = datetime.now()
-                    st.success(f"Last synced: {patient.last_sync}")
+                    st.success(f"Last synced: {patient.last_sync.strftime('%H:%M:%S')}")
+            with col2:
+                if st.button("📊 Export Data", key=f"export_{bed_id}"):
+                    st.success("Data exported successfully")
 
-# Central Nursing System View
+# Modern CNS view
 def cns_view():
-    st.title("Central Nursing System")
+    st.markdown("""
+        <div style='text-align: center; margin-bottom: 30px;'>
+            <h1 style='color: #00a8e8;'>Central Nursing System</h1>
+            <p style='color: #ffffff;'>Multi-bed monitoring dashboard</p>
+        </div>
+    """, unsafe_allow_html=True)
     
-    # Role-based access control
     if not st.session_state.authenticated:
         st.warning("Please login to access the CNS")
         return
     
-    # Display all patients in a table
-    st.subheader("Patient Overview")
+    # Modern patient overview
+    st.markdown("### Patient Overview")
     patient_data = []
     for bed_id, patient in st.session_state.patient_data.items():
         vitals = patient.generate_vitals()
@@ -216,49 +304,57 @@ def cns_view():
         })
     
     df = pd.DataFrame(patient_data)
-    st.dataframe(df, use_container_width=True)
+    st.dataframe(
+        df.style.background_gradient(cmap='Blues'),
+        use_container_width=True
+    )
     
-    # Alarm panel
-    st.subheader("Alarm Panel")
+    # Modern alarm panel
+    st.markdown("### Alarm Panel")
     all_alarms = []
     for patient in st.session_state.patient_data.values():
         all_alarms.extend(patient.check_alarms(patient.generate_vitals()))
     
     if all_alarms:
         for alarm in all_alarms:
-            st.error(f"Bed {alarm.get('bed_id', 'Unknown')}: {alarm['vital']} - {alarm['value']} ({alarm['severity']})")
+            alert_class = "alert-critical" if alarm['severity'] == 'critical' else "alert-warning"
+            st.markdown(f"""
+                <div class="{alert_class}">
+                    <strong>Bed {alarm.get('bed_id', 'Unknown')}</strong>: {alarm['vital']} - {alarm['value']} ({alarm['severity']})
+                </div>
+            """, unsafe_allow_html=True)
     else:
         st.success("No active alarms")
 
-# Login page
-def login_page():
-    st.title("SkanRay Login")
-    
-    # Simple login form (in production, use proper authentication)
-    username = st.text_input("Username")
-    password = st.text_input("Password", type="password")
-    role = st.selectbox("Role", ["Doctor", "Nurse", "Admin"])
-    
-    if st.button("Login"):
-        # Simple authentication (in production, use proper authentication)
-        if username and password:
-            st.session_state.authenticated = True
-            st.session_state.current_user = {"username": username, "role": role}
-            st.success("Login successful!")
-            st.rerun()
-        else:
-            st.error("Please enter both username and password")
-
-# Main app
+# Main app with modern navigation
 def main():
-    # Sidebar navigation
-    st.sidebar.title("Navigation")
+    # Modern sidebar
+    with st.sidebar:
+        st.markdown("""
+            <div style='text-align: center; margin-bottom: 30px;'>
+                <h2 style='color: #00a8e8;'>SkanRay</h2>
+                <p style='color: #ffffff;'>Patient Monitoring</p>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        if st.session_state.authenticated:
+            st.markdown(f"""
+                <div style='text-align: center; margin-bottom: 20px;'>
+                    <p style='color: #00a8e8;'>Welcome, {st.session_state.current_user['name']}</p>
+                    <p style='color: #ffffff;'>{st.session_state.current_user['role']}</p>
+                </div>
+            """, unsafe_allow_html=True)
+    
     if not st.session_state.authenticated:
         login_page()
     else:
         page = st.sidebar.radio(
-            "Go to",
-            ["Monitor Console", "Central Nursing System", "Admin Panel", "Logs"]
+            "Navigation",
+            ["Monitor Console", "Central Nursing System", "Admin Panel", "Logs"],
+            format_func=lambda x: f"📊 {x}" if x == "Monitor Console" else 
+                                f"🏥 {x}" if x == "Central Nursing System" else
+                                f"⚙️ {x}" if x == "Admin Panel" else
+                                f"📝 {x}"
         )
         
         if page == "Monitor Console":
@@ -272,7 +368,6 @@ def main():
             st.title("System Logs")
             st.write("Log viewing features coming soon...")
         
-        # Logout button
         if st.sidebar.button("Logout"):
             st.session_state.authenticated = False
             st.session_state.current_user = None
