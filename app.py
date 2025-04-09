@@ -31,101 +31,162 @@ st.set_page_config(
     }
 )
 
-# Custom CSS for modern, futuristic look
+# Custom CSS for professional healthcare look
 st.markdown("""
     <style>
     /* Main theme colors */
     :root {
-        --primary-color: #00a8e8;
-        --secondary-color: #003459;
-        --accent-color: #007ea7;
-        --background-color: #00171f;
-        --text-color: #ffffff;
+        --primary-color: #2c3e50;
+        --secondary-color: #34495e;
+        --accent-color: #3498db;
+        --background-color: #f5f6fa;
+        --text-color: #2c3e50;
+        --card-bg: #ffffff;
+        --border-color: #dcdde1;
     }
     
     /* Global styles */
     .stApp {
         background-color: var(--background-color);
         color: var(--text-color);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
     
     /* Sidebar styling */
     .css-1d391kg {
-        background-color: var(--secondary-color) !important;
+        background-color: var(--primary-color) !important;
+        color: white !important;
     }
     
     /* Button styling */
     .stButton>button {
-        background-color: var(--primary-color);
+        background-color: var(--accent-color);
         color: white;
-        border-radius: 10px;
+        border-radius: 4px;
         border: none;
-        padding: 10px 20px;
-        font-weight: bold;
+        padding: 8px 16px;
+        font-weight: 500;
         transition: all 0.3s ease;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     
     .stButton>button:hover {
-        background-color: var(--accent-color);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 168, 232, 0.3);
+        background-color: #2980b9;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     }
     
     /* Metric cards */
     .metric-card {
-        background: linear-gradient(145deg, var(--secondary-color), var(--background-color));
-        border-radius: 15px;
-        padding: 20px;
-        margin: 10px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        background: var(--card-bg);
+        border-radius: 8px;
+        padding: 16px;
+        margin: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        border: 1px solid var(--border-color);
         transition: all 0.3s ease;
     }
     
     .metric-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 16px rgba(0, 168, 232, 0.4);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    
+    .metric-card h3 {
+        color: var(--secondary-color);
+        font-size: 14px;
+        margin-bottom: 8px;
+        font-weight: 600;
+    }
+    
+    .metric-card h2 {
+        color: var(--accent-color);
+        font-size: 24px;
+        margin: 0;
+        font-weight: 700;
     }
     
     /* Alert styling */
     .alert-critical {
-        background-color: #ff4444;
+        background-color: #e74c3c;
         color: white;
-        padding: 10px;
-        border-radius: 10px;
-        margin: 5px 0;
-        animation: pulse 2s infinite;
+        padding: 12px;
+        border-radius: 4px;
+        margin: 8px 0;
+        font-weight: 500;
+        border-left: 4px solid #c0392b;
     }
     
     .alert-warning {
-        background-color: #ffbb33;
+        background-color: #f39c12;
         color: white;
-        padding: 10px;
-        border-radius: 10px;
-        margin: 5px 0;
-    }
-    
-    @keyframes pulse {
-        0% { opacity: 1; }
-        50% { opacity: 0.7; }
-        100% { opacity: 1; }
+        padding: 12px;
+        border-radius: 4px;
+        margin: 8px 0;
+        font-weight: 500;
+        border-left: 4px solid #d35400;
     }
     
     /* Chart containers */
     .chart-container {
-        background: rgba(0, 55, 95, 0.2);
-        border-radius: 15px;
-        padding: 20px;
-        margin: 10px 0;
+        background: var(--card-bg);
+        border-radius: 8px;
+        padding: 16px;
+        margin: 16px 0;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        border: 1px solid var(--border-color);
     }
     
     /* Login page styling */
     .login-container {
         max-width: 400px;
-        margin: 0 auto;
-        padding: 20px;
-        background: rgba(0, 55, 95, 0.3);
-        border-radius: 15px;
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        margin: 40px auto;
+        padding: 24px;
+        background: var(--card-bg);
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        border: 1px solid var(--border-color);
+    }
+    
+    /* Text styling */
+    h1, h2, h3, h4, h5, h6 {
+        color: var(--primary-color);
+        font-weight: 600;
+    }
+    
+    /* Table styling */
+    .stDataFrame {
+        background-color: var(--card-bg);
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    /* Form elements */
+    .stTextInput>div>div>input,
+    .stSelectbox>div>div>select {
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        padding: 8px;
+    }
+    
+    /* Tabs styling */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 2rem;
+    }
+    
+    .stTabs [data-baseweb="tab"] {
+        height: 50px;
+        white-space: pre-wrap;
+        background-color: var(--card-bg);
+        border-radius: 4px 4px 0px 0px;
+        gap: 1rem;
+        padding-top: 10px;
+        padding-bottom: 10px;
+    }
+    
+    .stTabs [aria-selected="true"] {
+        background-color: var(--accent-color);
+        color: white;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -153,9 +214,9 @@ if 'theme' not in st.session_state:
 # Modern login page
 def login_page():
     st.markdown("""
-        <div style='text-align: center; margin-bottom: 30px;'>
-            <h1 style='color: #00a8e8; font-size: 2.5em;'>SkanRay</h1>
-            <h2 style='color: #ffffff;'>Real-Time Patient Monitoring System</h2>
+        <div style='text-align: center; margin-bottom: 40px;'>
+            <h1 style='color: var(--primary-color); font-size: 2.5em; margin-bottom: 10px;'>SkanRay</h1>
+            <h2 style='color: var(--secondary-color); font-size: 1.5em;'>Real-Time Patient Monitoring System</h2>
         </div>
     """, unsafe_allow_html=True)
     
@@ -188,8 +249,8 @@ def login_page():
 def monitor_console_view():
     st.markdown("""
         <div style='text-align: center; margin-bottom: 30px;'>
-            <h1 style='color: #00a8e8;'>Monitor Console</h1>
-            <p style='color: #ffffff;'>Real-time patient monitoring dashboard</p>
+            <h1 style='color: var(--primary-color); margin-bottom: 10px;'>Monitor Console</h1>
+            <p style='color: var(--secondary-color); font-size: 1.1em;'>Real-time patient monitoring dashboard</p>
         </div>
     """, unsafe_allow_html=True)
     
@@ -310,8 +371,8 @@ def monitor_console_view():
 def cns_view():
     st.markdown("""
         <div style='text-align: center; margin-bottom: 30px;'>
-            <h1 style='color: #00a8e8;'>Central Nursing System</h1>
-            <p style='color: #ffffff;'>Multi-bed monitoring dashboard</p>
+            <h1 style='color: var(--primary-color); margin-bottom: 10px;'>Central Nursing System</h1>
+            <p style='color: var(--secondary-color); font-size: 1.1em;'>Multi-bed monitoring dashboard</p>
         </div>
     """, unsafe_allow_html=True)
     
@@ -378,8 +439,8 @@ def admin_panel():
     
     st.markdown("""
         <div style='text-align: center; margin-bottom: 30px;'>
-            <h1 style='color: #00a8e8;'>Admin Panel</h1>
-            <p style='color: #ffffff;'>System administration and configuration</p>
+            <h1 style='color: var(--primary-color); margin-bottom: 10px;'>Admin Panel</h1>
+            <p style='color: var(--secondary-color); font-size: 1.1em;'>System administration and configuration</p>
         </div>
     """, unsafe_allow_html=True)
     
