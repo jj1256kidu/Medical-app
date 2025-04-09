@@ -8,4 +8,6 @@ cryptography==42.0.2
 python-dotenv==1.0.1
 numpy==1.26.4
 tenacity==8.2.3
-packaging==24.0 
+packaging==24.0
+dash==2.14.2
+kaleido==0.2.1 
