@@ -1,5 +1,10 @@
 import streamlit as st
-import plotly.graph_objects as go
+try:
+    import plotly.graph_objects as go
+except ImportError:
+    st.error("Plotly is not installed. Please check your requirements.txt file and ensure all dependencies are properly installed.")
+    st.stop()
+
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
