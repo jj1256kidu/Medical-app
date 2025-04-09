@@ -1,4 +1,4 @@
-# SkanRay Real-Time Patient Monitoring System
+# Real-Time Patient Monitoring System
 
 A comprehensive healthcare monitoring solution built with Streamlit, providing real-time patient monitoring and central nursing system capabilities.
 
@@ -20,7 +20,7 @@ A comprehensive healthcare monitoring solution built with Streamlit, providing r
 1. Clone the repository:
 ```bash
 git clone <repository-url>
-cd skanray-monitoring
+cd-monitoring
 ```
 
 2. Create a virtual environment and activate it:
@@ -43,12 +43,12 @@ streamlit run app.py
 
 1. Build the Docker image:
 ```bash
-docker build -t skanray-monitoring .
+docker build -t-monitoring .
 ```
 
 2. Run the container:
 ```bash
-docker run -p 8501:8501 skanray-monitoring
+docker run -p 8501:8501-monitoring
 ```
 
 ## Usage
