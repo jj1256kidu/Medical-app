@@ -1,4 +1,18 @@
 import streamlit as st
+
+# Set page config with modern theme (MUST BE FIRST STREAMLIT COMMAND)
+st.set_page_config(
+    page_title="SkanRay Real-Time Patient Monitoring System",
+    page_icon="🏥",
+    layout="wide",
+    initial_sidebar_state="expanded",
+    menu_items={
+        'Get Help': 'https://www.skanray.com/support',
+        'Report a bug': "https://www.skanray.com/bug",
+        'About': "# SkanRay Real-Time Patient Monitoring System v2.0"
+    }
+)
+
 import sys
 import os
 
@@ -136,19 +150,6 @@ USERS = {
         "name": "Admin"
     }
 }
-
-# Set page config with modern theme
-st.set_page_config(
-    page_title="SkanRay Real-Time Patient Monitoring System",
-    page_icon="🏥",
-    layout="wide",
-    initial_sidebar_state="expanded",
-    menu_items={
-        'Get Help': 'https://www.skanray.com/support',
-        'Report a bug': "https://www.skanray.com/bug",
-        'About': "# SkanRay Real-Time Patient Monitoring System v2.0"
-    }
-)
 
 # Constants
 NUM_BEDS = 4
