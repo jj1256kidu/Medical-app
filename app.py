@@ -1,8 +1,23 @@
 import streamlit as st
-try:
-    import plotly.graph_objects as go
-except ImportError:
-    st.error("Plotly is not installed. Please check your requirements.txt file and ensure all dependencies are properly installed.")
+import sys
+import subprocess
+
+def check_and_install_plotly():
+    try:
+        import plotly.graph_objects as go
+        return True
+    except ImportError:
+        st.warning("Plotly not found. Attempting to install...")
+        try:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "plotly==5.18.0"])
+            import plotly.graph_objects as go
+            return True
+        except Exception as e:
+            st.error(f"Failed to install plotly: {str(e)}")
+            return False
+
+if not check_and_install_plotly():
+    st.error("Plotly installation failed. Please check your environment setup.")
     st.stop()
 
 import pandas as pd
