@@ -31,31 +31,37 @@ st.set_page_config(
     }
 )
 
-# Custom CSS for professional healthcare look
+# Custom CSS for professional healthcare monitoring interface
 st.markdown("""
     <style>
     /* Main theme colors */
     :root {
-        --primary-color: #2c3e50;
-        --secondary-color: #34495e;
-        --accent-color: #3498db;
-        --background-color: #f5f6fa;
-        --text-color: #2c3e50;
+        --primary-color: #1a237e;
+        --secondary-color: #283593;
+        --accent-color: #3949ab;
+        --background-color: #f8f9fa;
+        --text-color: #212529;
         --card-bg: #ffffff;
-        --border-color: #dcdde1;
+        --border-color: #e0e0e0;
+        --success-color: #2e7d32;
+        --warning-color: #ed6c02;
+        --danger-color: #d32f2f;
+        --info-color: #0288d1;
     }
     
     /* Global styles */
     .stApp {
         background-color: var(--background-color);
         color: var(--text-color);
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-family: 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+        line-height: 1.5;
     }
     
     /* Sidebar styling */
     .css-1d391kg {
         background-color: var(--primary-color) !important;
         color: white !important;
+        font-weight: 500;
     }
     
     /* Button styling */
@@ -66,12 +72,15 @@ st.markdown("""
         border: none;
         padding: 8px 16px;
         font-weight: 500;
-        transition: all 0.3s ease;
+        transition: all 0.2s ease;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-size: 0.875rem;
     }
     
     .stButton>button:hover {
-        background-color: #2980b9;
+        background-color: var(--secondary-color);
         transform: translateY(-1px);
         box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     }
@@ -79,12 +88,12 @@ st.markdown("""
     /* Metric cards */
     .metric-card {
         background: var(--card-bg);
-        border-radius: 8px;
+        border-radius: 4px;
         padding: 16px;
         margin: 8px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         border: 1px solid var(--border-color);
-        transition: all 0.3s ease;
+        transition: all 0.2s ease;
     }
     
     .metric-card:hover {
@@ -94,43 +103,51 @@ st.markdown("""
     
     .metric-card h3 {
         color: var(--secondary-color);
-        font-size: 14px;
+        font-size: 0.875rem;
         margin-bottom: 8px;
-        font-weight: 600;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
     
     .metric-card h2 {
-        color: var(--accent-color);
-        font-size: 24px;
+        color: var(--primary-color);
+        font-size: 1.5rem;
         margin: 0;
-        font-weight: 700;
+        font-weight: 600;
     }
     
     /* Alert styling */
     .alert-critical {
-        background-color: #e74c3c;
+        background-color: var(--danger-color);
         color: white;
-        padding: 12px;
+        padding: 12px 16px;
         border-radius: 4px;
         margin: 8px 0;
         font-weight: 500;
-        border-left: 4px solid #c0392b;
+        border-left: 4px solid #b71c1c;
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }
     
     .alert-warning {
-        background-color: #f39c12;
+        background-color: var(--warning-color);
         color: white;
-        padding: 12px;
+        padding: 12px 16px;
         border-radius: 4px;
         margin: 8px 0;
         font-weight: 500;
-        border-left: 4px solid #d35400;
+        border-left: 4px solid #e65100;
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }
     
     /* Chart containers */
     .chart-container {
         background: var(--card-bg);
-        border-radius: 8px;
+        border-radius: 4px;
         padding: 16px;
         margin: 16px 0;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -143,7 +160,7 @@ st.markdown("""
         margin: 40px auto;
         padding: 24px;
         background: var(--card-bg);
-        border-radius: 8px;
+        border-radius: 4px;
         box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         border: 1px solid var(--border-color);
     }
@@ -152,13 +169,15 @@ st.markdown("""
     h1, h2, h3, h4, h5, h6 {
         color: var(--primary-color);
         font-weight: 600;
+        margin-bottom: 1rem;
     }
     
     /* Table styling */
     .stDataFrame {
         background-color: var(--card-bg);
-        border-radius: 8px;
+        border-radius: 4px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        border: 1px solid var(--border-color);
     }
     
     /* Form elements */
@@ -166,27 +185,90 @@ st.markdown("""
     .stSelectbox>div>div>select {
         border: 1px solid var(--border-color);
         border-radius: 4px;
-        padding: 8px;
+        padding: 8px 12px;
+        font-size: 0.875rem;
     }
     
     /* Tabs styling */
     .stTabs [data-baseweb="tab-list"] {
         gap: 2rem;
+        border-bottom: 2px solid var(--border-color);
     }
     
     .stTabs [data-baseweb="tab"] {
-        height: 50px;
+        height: 48px;
         white-space: pre-wrap;
-        background-color: var(--card-bg);
-        border-radius: 4px 4px 0px 0px;
+        background-color: transparent;
+        border-radius: 4px 4px 0 0;
         gap: 1rem;
-        padding-top: 10px;
-        padding-bottom: 10px;
+        padding: 0 16px;
+        font-weight: 500;
+        color: var(--text-color);
     }
     
     .stTabs [aria-selected="true"] {
         background-color: var(--accent-color);
         color: white;
+    }
+    
+    /* Status indicators */
+    .status-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-weight: 500;
+        font-size: 0.875rem;
+    }
+    
+    .status-online {
+        background-color: #e8f5e9;
+        color: var(--success-color);
+    }
+    
+    .status-offline {
+        background-color: #ffebee;
+        color: var(--danger-color);
+    }
+    
+    /* Vital signs grid */
+    .vitals-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin: 16px 0;
+    }
+    
+    /* Alarm indicators */
+    .alarm-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-weight: 500;
+        font-size: 0.875rem;
+    }
+    
+    .alarm-critical {
+        background-color: #ffebee;
+        color: var(--danger-color);
+    }
+    
+    .alarm-warning {
+        background-color: #fff3e0;
+        color: var(--warning-color);
+    }
+    
+    /* Control panel */
+    .control-panel {
+        background: var(--card-bg);
+        border-radius: 4px;
+        padding: 16px;
+        margin: 16px 0;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        border: 1px solid var(--border-color);
     }
     </style>
 """, unsafe_allow_html=True)
