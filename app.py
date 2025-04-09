@@ -1,6 +1,24 @@
 import streamlit as st
+from streamlit_option_menu import option_menu
+import plotly.graph_objects as go
+import pandas as pd
+import numpy as np
+from datetime import datetime, timedelta
+import time
+import random
+from typing import Dict, List, Tuple
+import os
+import json
+from auth import AuthHandler
+from models import init_db, Patient, VitalSign, Alarm, SystemLog
+from hl7_simulator import HL7Simulator
 
-# Set page config with modern theme (MUST BE FIRST STREAMLIT COMMAND)
+# Initialize components
+auth_handler = AuthHandler()
+db_session = init_db()
+hl7_simulator = HL7Simulator()
+
+# Set page config (MUST BE FIRST STREAMLIT COMMAND)
 st.set_page_config(
     page_title="SkanRay Real-Time Patient Monitoring System",
     page_icon="🏥",
@@ -12,26 +30,6 @@ st.set_page_config(
         'About': "# SkanRay Real-Time Patient Monitoring System v2.0"
     }
 )
-
-import sys
-import os
-
-# Add current directory to Python path
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-
-try:
-    import plotly.graph_objects as go
-    import pandas as pd
-    import numpy as np
-    from datetime import datetime, timedelta
-    import sqlite3
-    import time
-    import random
-    from typing import Dict, List, Tuple
-except ImportError as e:
-    st.error(f"Required package not found: {str(e)}")
-    st.error("Please ensure all dependencies are installed correctly.")
-    st.stop()
 
 # Custom CSS for modern, futuristic look
 st.markdown("""
@@ -132,25 +130,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Predefined users
-USERS = {
-    "doctor": {
-        "password": "doctor123",
-        "role": "Doctor",
-        "name": "Dr. Smith"
-    },
-    "nurse": {
-        "password": "nurse123",
-        "role": "Nurse",
-        "name": "Nurse Johnson"
-    },
-    "admin": {
-        "password": "admin123",
-        "role": "Admin",
-        "name": "Admin"
-    }
-}
-
 # Constants
 NUM_BEDS = 4
 VITAL_SIGNS = {
@@ -168,6 +147,8 @@ if 'current_user' not in st.session_state:
     st.session_state.current_user = None
 if 'patient_data' not in st.session_state:
     st.session_state.patient_data = {}
+if 'theme' not in st.session_state:
+    st.session_state.theme = 'dark'
 
 # Modern login page
 def login_page():
@@ -185,18 +166,21 @@ def login_page():
         username = st.text_input("Username", key="username").lower()
         password = st.text_input("Password", type="password", key="password")
         
-        if st.button("Login", key="login_button"):
-            if username in USERS and password == USERS[username]["password"]:
-                st.session_state.authenticated = True
-                st.session_state.current_user = {
-                    "username": username,
-                    "role": USERS[username]["role"],
-                    "name": USERS[username]["name"]
-                }
-                st.success(f"Welcome, {USERS[username]['name']}!")
-                st.rerun()
-            else:
-                st.error("Invalid credentials. Please try again.")
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("Login", key="login_button"):
+                user_data = auth_handler.login(username, password)
+                if user_data:
+                    st.session_state.authenticated = True
+                    st.session_state.current_user = user_data
+                    st.success(f"Welcome, {user_data['name']}!")
+                    st.rerun()
+                else:
+                    st.error("Invalid credentials. Please try again.")
+        
+        with col2:
+            if st.button("Forgot Password?", key="forgot_password"):
+                st.info("Password reset feature coming soon!")
         
         st.markdown('</div>', unsafe_allow_html=True)
 
@@ -216,13 +200,49 @@ def monitor_console_view():
         with tab:
             bed_id = i + 1
             if bed_id not in st.session_state.patient_data:
-                st.session_state.patient_data[bed_id] = PatientSimulator(bed_id)
+                st.session_state.patient_data[bed_id] = {
+                    'vitals': {},
+                    'alarms': [],
+                    'last_sync': None,
+                    'offline': False
+                }
             
             patient = st.session_state.patient_data[bed_id]
-            vitals = patient.generate_vitals()
-            alarms = patient.check_alarms(vitals)
             
-            # Modern metric display
+            # Status bar
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                status = "🟢 Online" if not patient['offline'] else "🔴 Offline"
+                st.markdown(f"**Status:** {status}")
+            with col2:
+                if patient['last_sync']:
+                    st.markdown(f"**Last Sync:** {patient['last_sync']}")
+            with col3:
+                if st.button("🔄 Toggle Offline Mode", key=f"offline_{bed_id}"):
+                    patient['offline'] = not patient['offline']
+            
+            # Generate vitals
+            vitals = {}
+            for vital, params in VITAL_SIGNS.items():
+                value = random.uniform(params['min'], params['max'])
+                if random.random() < 0.1:  # 10% chance of variation
+                    value += random.uniform(-5, 5)
+                vitals[vital] = round(value, 1)
+            
+            # Check alarms
+            alarms = []
+            for vital, value in vitals.items():
+                params = VITAL_SIGNS[vital]
+                if value < params['min'] or value > params['max']:
+                    severity = 'critical' if abs(value - (params['min'] + params['max'])/2) > 10 else 'warning'
+                    alarms.append({
+                        'vital': vital,
+                        'value': value,
+                        'severity': severity,
+                        'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    })
+            
+            # Display vitals in modern cards
             cols = st.columns(5)
             for idx, (vital, value) in enumerate(vitals.items()):
                 with cols[idx]:
@@ -233,7 +253,7 @@ def monitor_console_view():
                         </div>
                     """, unsafe_allow_html=True)
             
-            # Alarm display with modern styling
+            # Display alarms
             if alarms:
                 st.markdown("### 🚨 Active Alarms")
                 for alarm in alarms:
@@ -244,7 +264,7 @@ def monitor_console_view():
                         </div>
                     """, unsafe_allow_html=True)
             
-            # Modern chart display
+            # Time series chart
             st.markdown('<div class="chart-container">', unsafe_allow_html=True)
             st.subheader("Vital Signs Trend")
             fig = go.Figure()
@@ -266,16 +286,25 @@ def monitor_console_view():
             st.plotly_chart(fig, use_container_width=True)
             st.markdown('</div>', unsafe_allow_html=True)
             
-            # Modern control panel
+            # Control panel
             st.markdown("### Control Panel")
-            col1, col2 = st.columns(2)
+            col1, col2, col3 = st.columns(3)
             with col1:
                 if st.button("🔄 Sync Data", key=f"sync_{bed_id}"):
-                    patient.last_sync = datetime.now()
-                    st.success(f"Last synced: {patient.last_sync.strftime('%H:%M:%S')}")
+                    patient['last_sync'] = datetime.now().strftime('%H:%M:%S')
+                    st.success(f"Last synced: {patient['last_sync']}")
             with col2:
                 if st.button("📊 Export Data", key=f"export_{bed_id}"):
-                    st.success("Data exported successfully")
+                    hl7_data = hl7_simulator.export_patient_data(str(bed_id))
+                    st.download_button(
+                        label="Download HL7",
+                        data=hl7_data,
+                        file_name=f"patient_{bed_id}_data.hl7",
+                        mime="text/plain"
+                    )
+            with col3:
+                if st.button("📝 Add Note", key=f"note_{bed_id}"):
+                    st.text_area("Clinical Notes", key=f"notes_{bed_id}")
 
 # Modern CNS view
 def cns_view():
@@ -290,18 +319,29 @@ def cns_view():
         st.warning("Please login to access the CNS")
         return
     
-    # Modern patient overview
+    # Filter panel
+    st.markdown("### Filter Panel")
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        bed_filter = st.multiselect("Filter by Bed", [f"Bed {i+1}" for i in range(NUM_BEDS)])
+    with col2:
+        severity_filter = st.multiselect("Filter by Severity", ["critical", "warning", "normal"])
+    with col3:
+        status_filter = st.multiselect("Filter by Status", ["Online", "Offline"])
+    
+    # Patient overview
     st.markdown("### Patient Overview")
     patient_data = []
     for bed_id, patient in st.session_state.patient_data.items():
-        vitals = patient.generate_vitals()
+        vitals = patient.get('vitals', {})
         patient_data.append({
             'Bed ID': bed_id,
-            'Heart Rate': vitals['Heart Rate'],
-            'Blood Pressure': vitals['Blood Pressure'],
-            'SpO2': vitals['SpO2'],
-            'Respiration Rate': vitals['Respiration Rate'],
-            'Temperature': vitals['Temperature']
+            'Status': 'Online' if not patient.get('offline', False) else 'Offline',
+            'Heart Rate': vitals.get('Heart Rate', 0),
+            'Blood Pressure': vitals.get('Blood Pressure', 0),
+            'SpO2': vitals.get('SpO2', 0),
+            'Respiration Rate': vitals.get('Respiration Rate', 0),
+            'Temperature': vitals.get('Temperature', 0)
         })
     
     df = pd.DataFrame(patient_data)
@@ -310,11 +350,14 @@ def cns_view():
         use_container_width=True
     )
     
-    # Modern alarm panel
+    # Alarm panel
     st.markdown("### Alarm Panel")
     all_alarms = []
-    for patient in st.session_state.patient_data.values():
-        all_alarms.extend(patient.check_alarms(patient.generate_vitals()))
+    for bed_id, patient in st.session_state.patient_data.items():
+        alarms = patient.get('alarms', [])
+        for alarm in alarms:
+            alarm['bed_id'] = bed_id
+            all_alarms.append(alarm)
     
     if all_alarms:
         for alarm in all_alarms:
@@ -326,6 +369,79 @@ def cns_view():
             """, unsafe_allow_html=True)
     else:
         st.success("No active alarms")
+
+# Admin panel
+def admin_panel():
+    if not st.session_state.authenticated or st.session_state.current_user['role'] != 'Admin':
+        st.warning("Access denied. Admin privileges required.")
+        return
+    
+    st.markdown("""
+        <div style='text-align: center; margin-bottom: 30px;'>
+            <h1 style='color: #00a8e8;'>Admin Panel</h1>
+            <p style='color: #ffffff;'>System administration and configuration</p>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    # User management
+    st.markdown("### User Management")
+    tab1, tab2, tab3 = st.tabs(["Add User", "Edit User", "Delete User"])
+    
+    with tab1:
+        with st.form("add_user_form"):
+            new_username = st.text_input("Username")
+            new_password = st.text_input("Password", type="password")
+            new_role = st.selectbox("Role", ["Doctor", "Nurse", "Admin"])
+            new_name = st.text_input("Full Name")
+            new_email = st.text_input("Email")
+            
+            if st.form_submit_button("Add User"):
+                if auth_handler.register_user(new_username, new_password, new_role, new_name, new_email):
+                    st.success("User added successfully!")
+                else:
+                    st.error("Username already exists!")
+    
+    with tab2:
+        users = list(auth_handler.users.keys())
+        selected_user = st.selectbox("Select User", users)
+        if selected_user:
+            user_data = auth_handler.users[selected_user]
+            with st.form("edit_user_form"):
+                new_role = st.selectbox("Role", ["Doctor", "Nurse", "Admin"], 
+                                      index=["Doctor", "Nurse", "Admin"].index(user_data["role"]))
+                new_name = st.text_input("Full Name", value=user_data["name"])
+                new_email = st.text_input("Email", value=user_data["email"])
+                
+                if st.form_submit_button("Update User"):
+                    if auth_handler.update_user(selected_user, role=new_role, name=new_name, email=new_email):
+                        st.success("User updated successfully!")
+                    else:
+                        st.error("Failed to update user!")
+    
+    with tab3:
+        users = list(auth_handler.users.keys())
+        user_to_delete = st.selectbox("Select User to Delete", users)
+        if st.button("Delete User"):
+            if auth_handler.delete_user(user_to_delete):
+                st.success("User deleted successfully!")
+            else:
+                st.error("Failed to delete user!")
+    
+    # System logs
+    st.markdown("### System Logs")
+    logs = db_session.query(SystemLog).order_by(SystemLog.timestamp.desc()).limit(100).all()
+    if logs:
+        log_data = []
+        for log in logs:
+            log_data.append({
+                'Timestamp': log.timestamp,
+                'User': log.user,
+                'Action': log.action,
+                'Details': log.details
+            })
+        st.dataframe(pd.DataFrame(log_data), use_container_width=True)
+    else:
+        st.info("No system logs available")
 
 # Main app with modern navigation
 def main():
@@ -345,27 +461,32 @@ def main():
                     <p style='color: #ffffff;'>{st.session_state.current_user['role']}</p>
                 </div>
             """, unsafe_allow_html=True)
+            
+            # Theme toggle
+            if st.button("🌓 Toggle Theme"):
+                st.session_state.theme = 'light' if st.session_state.theme == 'dark' else 'dark'
+                st.rerun()
     
     if not st.session_state.authenticated:
         login_page()
     else:
-        page = st.sidebar.radio(
-            "Navigation",
-            ["Monitor Console", "Central Nursing System", "Admin Panel", "Logs"],
-            format_func=lambda x: f"📊 {x}" if x == "Monitor Console" else 
-                                f"🏥 {x}" if x == "Central Nursing System" else
-                                f"⚙️ {x}" if x == "Admin Panel" else
-                                f"📝 {x}"
+        # Modern navigation menu
+        selected = option_menu(
+            menu_title=None,
+            options=["Monitor Console", "Central Nursing System", "Admin Panel", "Logs"],
+            icons=["monitor", "hospital", "gear", "list"],
+            menu_icon="cast",
+            default_index=0,
+            orientation="horizontal",
         )
         
-        if page == "Monitor Console":
+        if selected == "Monitor Console":
             monitor_console_view()
-        elif page == "Central Nursing System":
+        elif selected == "Central Nursing System":
             cns_view()
-        elif page == "Admin Panel":
-            st.title("Admin Panel")
-            st.write("Admin features coming soon...")
-        elif page == "Logs":
+        elif selected == "Admin Panel":
+            admin_panel()
+        elif selected == "Logs":
             st.title("System Logs")
             st.write("Log viewing features coming soon...")
         
